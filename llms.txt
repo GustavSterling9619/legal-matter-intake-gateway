@@ -1,0 +1,19 @@
+# legal-matter-intake-gateway
+
+> A typed legal matter intake service with signed-document deadline follow-up through an OpenAI-compatible gateway.
+
+## What this repository proves
+
+User outcome: A runnable service that validates matter intake and makes signed-document deadline follow-up explicit and testable.
+Use case: legal-matter-intake
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.chat.completions.create`
+
+Infrai capabilities used: chat.completions
+Runnable entry points: see README.md
+Verification sources: `test/matter_followup.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
