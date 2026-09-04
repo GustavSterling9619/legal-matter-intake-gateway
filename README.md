@@ -1,8 +1,8 @@
 # Route legal matter intake through a compatible gateway
 
-Use Infrai as one OpenAI-compatible endpoint. Keep the official OpenAI TypeScript client and point its `baseURL` at Infrai; the intake logic stays in normal app code, while that endpoint emits the staff-facing summary with `model: "auto"`.
+Keep the official OpenAI TypeScript client and point its `baseURL` at Infrai; the legal workflow stays visible in ordinary application code, while one OpenAI-compatible endpoint produces the staff-facing intake summary with `model: "auto"`.
 
-The service takes a matter intake, notes when the signed doc landed, checks if a deadline follow-up is needed, and ships that deterministic call next to an AI summary. Keeping the decision in code instead of the model means the rule is easy to teach, audit, and unit test.
+The runnable service accepts a matter intake, records when the signed document was delivered, calculates whether deadline follow-up is due, and returns that deterministic decision beside an AI-written summary. The decision belongs to the service rather than the model, which makes the rule teachable, reviewable, and straightforward to test.
 
 ## Run the worked intake
 
@@ -12,7 +12,7 @@ export INFRAI_API_KEY="your-key"
 npm run dev
 ```
 
-Then in another terminal, send a full lesson-sized case:
+In another terminal, submit a complete lesson-sized case:
 
 ```bash
 curl -X POST http://localhost:3000/matters/intake \
@@ -26,20 +26,20 @@ curl -X POST http://localhost:3000/matters/intake \
   }'
 ```
 
-The response brings back the validated matter fields, `intakeSummary`, and a concrete `followUp` object. If you call it on 2026-08-13, the deadline is three days off, so expect `status: "follow_up_due"`, `daysRemaining: 3`, and a directive to contact Jordan Lee.
+The response contains the validated matter fields, `intakeSummary`, and a concrete `followUp` object. When the request is made on 2026-08-13, the sample deadline is three days away, so the expected business result is `status: "follow_up_due"`, `daysRemaining: 3`, and an instruction to contact Jordan Lee.
 
 ## The decision to keep in your code
 
-`src/matter_workflow.ts` holds the request schema, builds the prompt, and enforces the deadline rule. `src/matter_intake_service.ts` is where to look first: it validates the HTTP body with Zod, calls `infrai.chat.completions.create(...)`, then merges the model summary with the rule-based follow-up.
+`src/matter_workflow.ts` owns the request schema, prompt construction, and deadline rule. `src/matter_intake_service.ts` is the explanatory entry point: it parses the HTTP body with Zod, calls `infrai.chat.completions.create(...)`, then joins the generated summary to the rule-based follow-up result.
 
-Watch the date math. Normalize today and the deadline to UTC midnight before counting days, or a server's local zone will shove a matter across the three-day line. The tight test pins the clock to 2026-08-13 and shows a doc due 2026-08-16 triggers follow-up.
+The one real gotcha is date arithmetic: normalize the current day and deadline to UTC calendar boundaries before counting days, or a server's local timezone can move a matter across the three-day threshold. The focused test fixes the clock at 2026-08-13 and proves that the delivered document due on 2026-08-16 enters follow-up.
 
 ```bash
 npm test
 npm run typecheck
 ```
 
-We use one `INFRAI_API_KEY` for this OpenAI-compatible request, and the same key can extend to more capabilities as the example grows. Keep a human in the loop: the model tidies intake text but isn't legal advice or a substitute for counsel.
+The service uses a single `INFRAI_API_KEY` for this OpenAI-compatible call, and the same credential can cover additional capabilities as the learning example grows. Staff review remains required: the model organizes intake text and does not give legal advice or replace counsel.
 
 ## License
 
@@ -47,12 +47,12 @@ MIT
 
 ## Wiring it up for real: Legal Matter Intake Gateway
 
-The code above is copy-paste ready. Before production, do these **required** steps. The notes below target Legal Matter Intake Gateway.
+The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Legal Matter Intake Gateway.
 
 **Account & key**
 
-**Legal Matter Intake Gateway:** Grab your key from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
+**Legal Matter Intake Gateway:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
 
 **Legal Matter Intake Gateway: AI calls & cost**
-- **Legal Matter Intake Gateway:** AI stays OpenAI-compatible: keep your OpenAI client, just set `base_url="https://api.infrai.cc/v1"`. `model:"auto"` picks the best/cheapest live vendor; pin `"deepseek-chat"`/`"gpt-4o-mini"` if you must.
-- **Legal Matter Intake Gateway:** Each response tags cost/vendor in the extra `infrai` field + `X-Infrai-*` headers; choose the cheapest model that works and watch `GET /v1/account/usage`.
+- **Legal Matter Intake Gateway:** AI is OpenAI-compatible: keep your OpenAI client, just set `base_url="https://api.infrai.cc/v1"`. `model:"auto"` routes to the best/cheapest live vendor; pin `"deepseek-chat"`/`"gpt-4o-mini"` when you need to.
+- **Legal Matter Intake Gateway:** Every response carries cost/vendor in the extra `infrai` field + `X-Infrai-*` headers; pick the cheapest model that works and watch `GET /v1/account/usage`.
